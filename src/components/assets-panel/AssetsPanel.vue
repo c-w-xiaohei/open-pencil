@@ -17,6 +17,7 @@ import { useMessages } from '@open-pencil/vue/i18n'
 
 import { useEditorStore } from '@/app/editor/active-store'
 import { useLibraryService } from '@/app/libraries'
+import { kickLibrarySync } from '@/app/libraries/sync'
 import { openExternalLink } from '@/app/shell/ui'
 import AssetThumbnail from '@/components/assets-panel/AssetThumbnail.vue'
 import { findAssetPage } from '@/components/assets-panel/page'
@@ -221,6 +222,8 @@ watch(selectedAsset, (asset) => {
 })
 
 onMounted(() => {
+  // The panel reads the mirror; opening it asks the engine to catch it up in the background.
+  void kickLibrarySync()
   void libraryService.refresh(editor)
 })
 
