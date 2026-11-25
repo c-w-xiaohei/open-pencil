@@ -142,9 +142,7 @@ describe('library sync engine', () => {
 
     void kickLibrarySync()
     void kickLibrarySync()
-    await withDeadline(SYNC_SETTLE_DEADLINE_MS, () =>
-      until(() => listCalls.value > 0).toBe(true)
-    )
+    await withDeadline(SYNC_SETTLE_DEADLINE_MS, () => until(() => listCalls.value > 0).toBe(true))
     void kickLibrarySync()
     void kickLibrarySync()
     gate.resolve(undefined)
