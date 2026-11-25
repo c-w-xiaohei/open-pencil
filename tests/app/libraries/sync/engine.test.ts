@@ -293,7 +293,11 @@ describe('library sync engine', () => {
     const editor = createEditorStore(new SceneGraph())
     registerNeedsProvider(editor)
     editor.updateEnabledLibraries((bindings) =>
-      bindings.set('design-system', { libraryId: 'design-system', revisionId: first, enabled: true })
+      bindings.set('design-system', {
+        libraryId: 'design-system',
+        revisionId: first,
+        enabled: true
+      })
     )
     startLibrarySync()
     const firstRemote = await track()
@@ -348,9 +352,7 @@ describe('library sync engine', () => {
     expect(diagnostics.parked).toBe(false)
     expect(diagnostics.attempts).toBe(0)
     // And the rebuilt remote did pull the new revision itself.
-    expect(
-      await librarySyncRemote.value?.mirror.hasRevision('design-system', second)
-    ).toBe(true)
+    expect(await librarySyncRemote.value?.mirror.hasRevision('design-system', second)).toBe(true)
   })
 
   test('a resume during an active pull keeps cleared failures cleared', async () => {
@@ -460,9 +462,7 @@ describe('library sync engine', () => {
     const remote = await track()
     await flush()
     await whenLibrarySyncIdle()
-    expect(await remote.catalog.listLibraries()).toMatchObject([
-      { libraryId: 'design-system' }
-    ])
+    expect(await remote.catalog.listLibraries()).toMatchObject([{ libraryId: 'design-system' }])
     expect(objects.getCalls).toBe(1)
 
     await kickLibrarySync()

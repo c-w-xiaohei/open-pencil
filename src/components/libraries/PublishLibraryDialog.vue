@@ -11,15 +11,8 @@ import { useMessages } from '@open-pencil/vue/i18n'
 
 import { useEditorStore } from '@/app/editor/active-store'
 import { publishLibraryDialogOpen, useLibraryService } from '@/app/libraries'
-import {
-  LibraryContentFailedError,
-  LibraryContentSyncingError
-} from '@/app/libraries/errors'
-import {
-  kickLibrarySync,
-  librarySyncResolution,
-  resumeLibrarySync
-} from '@/app/libraries/sync'
+import { LibraryContentFailedError, LibraryContentSyncingError } from '@/app/libraries/errors'
+import { kickLibrarySync, librarySyncResolution, resumeLibrarySync } from '@/app/libraries/sync'
 import AppButton from '@/components/ui/button/AppButton.vue'
 import {
   AppDialogFooter,
