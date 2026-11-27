@@ -21,6 +21,8 @@ import * as invitationEmails from './migrations/017_invitation_emails'
 import * as enrollmentSource from './migrations/018_enrollment_source'
 import * as oauth from './migrations/019_oauth'
 import * as documentDescription from './migrations/020_document_description'
+import * as slides from './migrations/021_slides'
+import * as revisionCover from './migrations/022_revision_cover'
 import type { CloudDatabase } from './tables'
 
 /**
@@ -51,7 +53,9 @@ const migrations: Record<string, CloudMigration> = {
   '017_invitation_emails': invitationEmails,
   '018_enrollment_source': enrollmentSource,
   '019_oauth': oauth,
-  '020_document_description': documentDescription
+  '020_document_description': documentDescription,
+  '021_slides': slides,
+  '022_revision_cover': revisionCover
 }
 
 /** Cloud's migrations, in order. */

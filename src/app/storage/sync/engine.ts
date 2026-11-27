@@ -15,6 +15,7 @@ import {
   StorageRevisionConflictError,
   StorageUnavailableError
 } from '@/app/integrations/storage'
+import { S3HttpError } from '@/app/integrations/storage/s3/client'
 import { evictLocalFigCache } from '@/app/storage/cache-eviction'
 import { getLocalCanvasStore } from '@/app/storage/local-store'
 import { getOutbox } from '@/app/storage/sync/outbox'
@@ -47,15 +48,27 @@ export function nextSyncWakeDelay(jobs: OutboxJob[], now = Date.now()): number |
   return nextAt === PARKED_ATTEMPT_AT ? null : Math.max(250, nextAt - now)
 }
 
-function isPermanentError(error: unknown): boolean {
-  if (!(error instanceof Error)) return false
-  const msg = error.message.toLowerCase()
-  return (
-    msg.includes('403') ||
-    msg.includes('401') ||
-    msg.includes('access denied') ||
-    msg.includes('invalid access key')
-  )
+/**
+ * Whether a storage failure cannot heal by retrying: any S3 4xx (credentials, 412 refusals)
+ * except 429, which is rate limiting that heals through the regular backoff; 5xx and network
+ * failures stay retryable. The Cloud adapter's `CloudAPIError` is matched structurally,
+ * since a build without Cloud may not bundle the class. Shared with the library sync engine.
+ */
+export function isPermanentError(error: unknown): boolean {
+  if (error instanceof S3HttpError) {
+    return error.status >= 400 && error.status < 500 && error.status !== 429
+  }
+  // CloudAPIError and other status-bearing API errors: only credential refusals are
+  // permanent; their 404s and 409s stay retryable.
+  if (
+    error instanceof Error &&
+    error.name === 'CloudAPIError' &&
+    'status' in error &&
+    typeof error.status === 'number'
+  ) {
+    return error.status === 401 || error.status === 403
+  }
+  return false
 }
 
 async function runJob(job: OutboxJob): Promise<void> {
@@ -83,6 +96,9 @@ async function runJob(job: OutboxJob): Promise<void> {
   if (!meta.hasFig) return
   const fig = await store.readFig(job.canvasId)
   if (!fig || fig.byteLength === 0) throw new Error('Local document missing for sync')
+  const cover = await store.readCover(job.canvasId, meta.revision)
+  // A save between these reads would pair one file with another's cover; its own job uploads it.
+  if ((await store.getMeta(job.canvasId))?.revision !== meta.revision) return
   setUploadProgress(job.canvasId, 0)
   let written: { revision: string | null }
   try {
@@ -96,7 +112,7 @@ async function runJob(job: OutboxJob): Promise<void> {
       ({ transferredBytes, totalBytes }) => {
         if (totalBytes) setUploadProgress(job.canvasId, transferredBytes / totalBytes)
       },
-      { baseRevision: meta.remoteRevision ?? null }
+      { baseRevision: meta.remoteRevision ?? null, cover }
     )
   } finally {
     setUploadProgress(job.canvasId, null)

@@ -94,7 +94,7 @@ export interface DocumentTable {
   /** What the file is, in a few sentences, for the community gallery; see migration 020. */
   description: Generated<string | null>
   /** A design or a board; see migration 027. */
-  kind: Generated<'design' | 'board'>
+  kind: Generated<'design' | 'board' | 'slides'>
   currentRevisionId: string | null
   collaborationEpoch: Generated<number>
   version: Generated<number>
@@ -211,6 +211,8 @@ export interface DocumentRevisionTable {
   documentId: string
   parentRevisionId: string | null
   storageObjectId: string
+  /** The workspace image drawn as the revision's cover, or null for none; see migration 022. */
+  coverChecksum: Generated<string | null>
   createdBy: string
   createdAt: TimestampColumn
 }
